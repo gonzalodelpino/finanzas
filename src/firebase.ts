@@ -3,25 +3,24 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getAnalytics, isSupported } from "firebase/analytics";
 
-// Configuración de Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyCA4hG839TX9b2RUoRzS89Z42RVXLfRGTU",
   authDomain: "finanzas-2a649.firebaseapp.com",
   projectId: "finanzas-2a649",
-  storageBucket: "finanzas-2a649.appspot.com",  // Corregido
+  storageBucket: "finanzas-2a649.appspot.com",
   messagingSenderId: "998963751898",
   appId: "1:998963751898:web:ef36c14fbff3aa26d62ee3",
   measurementId: "G-HC6JYCDQ44"
 };
 
-// Inicializa la aplicación de Firebase
+// Inicializamos la aplicación Firebase
 const app = initializeApp(firebaseConfig);
 
-// Obtiene las instancias necesarias
+// Obtenemos las instancias necesarias de Firebase
 const auth = getAuth(app);
-const firestore = getFirestore(app);
+const db = getFirestore(app);  // Referencia a Firestore
 
-// Analytics solo se inicializa si es soportado
+// Configuración de Analytics (opcional)
 let analytics: ReturnType<typeof getAnalytics> | null = null;
 
 isSupported()
@@ -37,5 +36,5 @@ isSupported()
     console.error("Error al inicializar Analytics:", error);
   });
 
-export { auth, firestore, analytics };
-
+// Exportamos las configuraciones para su uso en otros archivos
+export { auth, db, analytics };

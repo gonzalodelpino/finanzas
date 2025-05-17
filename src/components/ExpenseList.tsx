@@ -18,6 +18,7 @@ export default function ExpenseList() {
   const { user } = useAuth();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [filters, setFilters] = useState({ category: "", from: "", to: "" });
+  const [loading, setLoading] = useState(true); // Para mostrar un mensaje de carga
 
   useEffect(() => {
     if (!user) return;
@@ -29,6 +30,8 @@ export default function ExpenseList() {
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
+      setLoading(false); // Datos cargados
+
       let filtered = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
@@ -61,26 +64,40 @@ export default function ExpenseList() {
 
       <ExpenseFilters onFilterChange={setFilters} />
 
-      <table className="w-full border-collapse border">
-        <thead>
-          <tr className="bg-gray-100">
-            <th>Monto</th>
-            <th>Categoría</th>
-            <th>Fecha</th>
-            <th>Notas</th>
-          </tr>
-        </thead>
-        <tbody>
-          {expenses.map((gasto) => (
-            <tr key={gasto.id}>
-              <td>{gasto.amount} €</td>
-              <td>{gasto.category}</td>
-              <td>{gasto.date}</td>
-              <td>{gasto.notes}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {loading ? (
+        <div className="text-center mt-4">Cargando gastos...</div>
+      ) : (
+        <>
+          {expenses.length === 0 ? (
+            <div className="text-center mt-4">No se encontraron gastos</div>
+          ) : (
+            <table
+              className="w-full border-collapse border mt-4"
+              aria-label="Lista de gastos"
+            >
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="px-4 py-2">Monto</th>
+                  <th className="px-4 py-2">Categoría</th>
+                  <th className="px-4 py-2">Fecha</th>
+                  <th className="px-4 py-2">Notas</th>
+                </tr>
+              </thead>
+              <tbody>
+                {expenses.map((gasto) => (
+                  <tr key={gasto.id}>
+                    <td className="px-4 py-2">{gasto.amount} €</td>
+                    <td className="px-4 py-2">{gasto.category}</td>
+                    <td className="px-4 py-2">{gasto.date}</td>
+                    <td className="px-4 py-2">{gasto.notes}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </>
+      )}
     </div>
   );
 }
+

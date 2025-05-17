@@ -1,0 +1,217 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '@/firebase';
+import { useAuth } from '@/context/AuthContext';
+import Loader from '@/components/Loader';
+import { toast } from 'sonner';
+
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  Legend,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  LineChart,
+  Line,
+  ResponsiveContainer,
+} from 'recharts';
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#9c27b0', '#f44336'];
+
+export default function AnalisisPage() {
+  const { user } = useAuth();
+  const [gastos, setGastos] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedData, setSelectedData] = useState<any | null>(null);
+
+  useEffect(() => {
+    const fetchGastos = async () => {
+      if (!user) return;
+
+      const start = Date.now();
+
+      try {
+        const querySnapshot = await getDocs(collection(db, 'gastos'));
+        const userGastos = querySnapshot.docs
+          .map((doc) => ({ id: doc.id, ...doc.data() }))
+          .filter((gasto) => gasto.usuarioId === user.uid);
+
+        if (userGastos.length === 0) {
+          setError('No se encontraron gastos registrados.');
+        }
+
+        setGastos(userGastos);
+      } catch (error) {
+        console.error(error);
+        setError('Error al cargar los gastos.');
+      } finally {
+        const elapsed = Date.now() - start;
+        const delay = Math.max(1000 - elapsed, 0);
+        setTimeout(() => {
+          setLoading(false);
+          toast.success('Gastos cargados correctamente');
+        }, delay);
+      }
+    };
+
+    fetchGastos();
+  }, [user]);
+
+  const agruparPorCategoria = () => {
+    const categoriaMap: Record<string, number> = {};
+    gastos.forEach((gasto) => {
+      categoriaMap[gasto.categoria] = (categoriaMap[gasto.categoria] || 0) + gasto.monto;
+    });
+    return Object.keys(categoriaMap).map((categoria) => ({
+      name: categoria,
+      value: categoriaMap[categoria],
+    }));
+  };
+
+  const agruparPorMes = () => {
+    const mesMap: Record<string, number> = {};
+    gastos.forEach((gasto) => {
+      const mes = new Date(gasto.fecha).toLocaleString('default', { month: 'long' });
+      mesMap[mes] = (mesMap[mes] || 0) + gasto.monto;
+    });
+    return Object.keys(mesMap).map((mes) => ({ name: mes, value: mesMap[mes] }));
+  };
+
+  const agruparPorFecha = () => {
+    const fechaMap: Record<string, number> = {};
+    gastos.forEach((gasto) => {
+      const fecha = new Date(gasto.fecha).toLocaleDateString();
+      fechaMap[fecha] = (fechaMap[fecha] || 0) + gasto.monto;
+    });
+    return Object.keys(fechaMap).map((fecha) => ({ name: fecha, value: fechaMap[fecha] }));
+  };
+
+  const dataPorCategoria = agruparPorCategoria();
+  const dataPorMes = agruparPorMes();
+  const dataPorFecha = agruparPorFecha();
+
+  const calculateSummary = (data: any[]) => {
+    const total = data.reduce((acc, item) => acc + item.value, 0);
+    const max = Math.max(...data.map(item => item.value));
+    const min = Math.min(...data.map(item => item.value));
+
+    return {
+      total,
+      max,
+      min,
+    };
+  };
+
+  const handleDataClick = (e: any) => {
+    if (e) {
+      const selected = e?.activePayload ? e.activePayload[0]?.payload : null;
+      if (selected) {
+        setSelectedData(selected);
+      }
+    }
+  };
+
+  return (
+    <div className="flex flex-col items-center p-6">
+      <h1 className="text-3xl font-bold mb-6 text-center text-blue-600">Análisis de Gastos</h1>
+
+      {loading ? (
+        <Loader />
+      ) : error ? (
+        <div className="text-center text-red-600 font-medium">{error}</div>
+      ) : (
+        <div className="flex flex-col gap-12 w-full">
+          {/* Tarjetas de resumen de gastos al principio */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full mb-12">
+            <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-500 ease-in-out text-white border border-blue-800">
+              <h3 className="text-xl font-semibold text-center">Total Gastado</h3>
+              <p className="text-3xl text-center mt-4">${calculateSummary(dataPorCategoria).total}</p>
+            </div>
+            <div className="bg-gradient-to-r from-red-600 to-red-700 p-6 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-500 ease-in-out text-white border border-red-800">
+              <h3 className="text-xl font-semibold text-center">Gasto Máximo</h3>
+              <p className="text-3xl text-center mt-4">${calculateSummary(dataPorCategoria).max}</p>
+            </div>
+            <div className="bg-gradient-to-r from-green-600 to-teal-700 p-6 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-500 ease-in-out text-white border border-green-800">
+              <h3 className="text-xl font-semibold text-center">Gasto Mínimo</h3>
+              <p className="text-3xl text-center mt-4">${calculateSummary(dataPorCategoria).min}</p>
+            </div>
+          </div>
+
+          {/* Fila de gráficos: Categoría y Mes */}
+          <div className="grid md:grid-cols-2 gap-8 w-full">
+            {/* Categoría */}
+            <div className="bg-white p-6 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-500 ease-in-out border border-gray-300">
+              <h2 className="text-xl font-semibold mb-6 text-center text-gray-700">Gastos por Categoría</h2>
+              <div className="w-full h-[480px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={dataPorCategoria}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius="80%"
+                      dataKey="value"
+                      label={false}
+                      onClick={handleDataClick}
+                    >
+                      {dataPorCategoria.map((_, index) => (
+                        <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Legend verticalAlign="bottom" height={36} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Mes */}
+            <div className="bg-white p-6 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-500 ease-in-out border border-gray-300">
+              <h2 className="text-xl font-semibold mb-6 text-center text-gray-700">Gastos por Mes</h2>
+              <ResponsiveContainer width="100%" height={480}>
+                <BarChart data={dataPorMes}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" tick={{ fontSize: 14 }} />
+                  <YAxis tick={{ fontSize: 14 }} />
+                  <Tooltip cursor={{ stroke: 'red', strokeWidth: 2 }} />
+                  <Legend verticalAlign="bottom" height={36} />
+                  <Bar dataKey="value" fill="#42a5f5" onClick={handleDataClick} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Tendencia */}
+          <div className="bg-white p-6 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-500 ease-in-out w-full border border-gray-300">
+            <h2 className="text-xl font-semibold mb-6 text-center text-gray-700">Tendencia de Gastos</h2>
+            <ResponsiveContainer width="100%" height={350}>
+              <LineChart data={dataPorFecha}>
+<CartesianGrid strokeDasharray="3 3" />
+<XAxis dataKey="name" tick={{ fontSize: 14 }} />
+<YAxis tick={{ fontSize: 14 }} />
+<Tooltip cursor={{ stroke: 'red', strokeWidth: 2 }} />
+<Legend verticalAlign="bottom" height={36} />
+<Line type="monotone" dataKey="value" stroke="#82ca9d" onClick={handleDataClick} />
+</LineChart>
+</ResponsiveContainer>
+        {selectedData && (
+          <div className="mt-4 text-center">
+            <h3 className="text-lg font-semibold">{selectedData.name}</h3>
+            <p><strong>Total de gastos:</strong> ${calculateSummary([selectedData]).total}</p>
+            <p><strong>Gasto máximo:</strong> ${calculateSummary([selectedData]).max}</p>
+            <p><strong>Gasto mínimo:</strong> ${calculateSummary([selectedData]).min}</p>
+          </div>
+        )}
+      </div>
+    </div>
+  )}
+</div>
+);
+}

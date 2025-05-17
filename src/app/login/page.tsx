@@ -1,98 +1,83 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../../firebase"; // Asegúrate de que esta ruta sea correcta
+import { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../../firebase';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
 
-    // Validar campos vacíos
     if (!email || !password) {
-      setError("Por favor, ingresa tu correo electrónico y contraseña.");
-      return;
-    }
-
-    // Validar formato de correo electrónico
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailPattern.test(email)) {
-      setError("Por favor, ingresa un correo electrónico válido.");
+      setError('Por favor, completa ambos campos.');
       return;
     }
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      router.push("/dashboard"); // Redirige tras login exitoso
+      router.push('/dashboard');
     } catch (error: any) {
-      console.error("Error de Firebase:", error);
-
-      switch (error.code) {
-        case "auth/invalid-email":
-          setError("El correo electrónico ingresado no es válido.");
-          break;
-        case "auth/user-not-found":
-          setError("No se encontró una cuenta con este correo electrónico.");
-          break;
-        case "auth/wrong-password":
-          setError("La contraseña ingresada es incorrecta.");
-          break;
-        case "auth/too-many-requests":
-          setError("Demasiados intentos fallidos. Intenta más tarde.");
-          break;
-        default:
-          setError("Hubo un error al intentar iniciar sesión. Intenta nuevamente.");
-      }
+      setError('Error al iniciar sesión. Revisa tus credenciales.');
     }
   };
 
   return (
-    <div style={{ padding: "2rem", maxWidth: "400px", margin: "0 auto", textAlign: "center" }}>
-      <h1>Iniciar sesión</h1>
-      <form onSubmit={handleLogin} style={{ marginTop: "1rem" }}>
-        <div>
+    <div
+      className="min-h-screen bg-cover bg-center flex items-center justify-center"
+      style={{ backgroundImage: "url('/bg-login.jpg')" }}
+    >
+      <div className="bg-white/90 backdrop-blur-md rounded-xl shadow-2xl p-10 w-full max-w-md">
+        <div className="flex flex-col items-center mb-6">
+          <img
+            src="/bank-logo-icon-illustration-vector.png"
+            alt="Logo del banco"
+            className="w-20 h-20 mb-4"
+          />
+          <h1 className="text-3xl font-bold text-gray-800">Banco Aurora</h1>
+          <p className="text-gray-500 text-sm mt-1">Accede a tu banca online</p>
+        </div>
+
+        <form onSubmit={handleLogin} className="space-y-5">
           <input
             type="email"
             placeholder="Correo electrónico"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            required
-            style={{ padding: "0.5rem", marginBottom: "1rem", width: "100%" }}
+            className="w-full p-3 rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
           />
-        </div>
-        <div>
           <input
             type="password"
             placeholder="Contraseña"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            required
-            style={{ padding: "0.5rem", marginBottom: "1rem", width: "100%" }}
+            className="w-full p-3 rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
           />
+          {error && <p className="text-sm text-red-500 text-center">{error}</p>}
+          <button
+            type="submit"
+            className="w-full py-3 bg-blue-700 text-white font-semibold rounded-lg shadow hover:bg-blue-800 transition"
+          >
+            Iniciar sesión
+          </button>
+        </form>
+
+        <div className="mt-6 text-center text-sm text-gray-600">
+          ¿No tienes cuenta?{' '}
+          <Link href="/register">
+            <span className="text-blue-600 hover:underline font-medium">
+              Regístrate
+            </span>
+          </Link>
         </div>
-        {error && <p style={{ color: "red", marginTop: "1rem" }}>{error}</p>}
-        <button
-          type="submit"
-          style={{
-            padding: "0.5rem 1rem",
-            marginTop: "1rem",
-            backgroundColor: "#007bff",
-            color: "white",
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer",
-            width: "100%",
-          }}
-        >
-          Iniciar sesión
-        </button>
-      </form>
+      </div>
     </div>
   );
 }

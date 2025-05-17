@@ -2,21 +2,76 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;700&display=swap');
+
+/* Aplicando la fuente globalmente */
+body {
+  font-family: 'Poppins', sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Estilo para el fondo de la página de login */
+.login-container {
+  background: linear-gradient(to bottom right, #1e3a8a, #5126eb, #0a0a0a);
+  backdrop-filter: blur(15px);
+  padding: 2rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Botón estilizado */
+.login-button {
+  background: linear-gradient(to right, #2563eb, #9333ea);
+  color: white;
+  padding: 12px;
+  font-weight: bold;
+  border-radius: 8px;
+  transition: background 0.3s ease;
+}
+
+.login-button:hover {
+  background: linear-gradient(to right, #1e40af, #7c3aed);
+}
+
+/* Estilos Responsivos */
+
+/* Pantallas pequeñas */
+@media (max-width: 640px) {
+  .login-container {
+    padding: 1rem; /* Reducir padding en dispositivos pequeños */
+  }
+
+  .login-button {
+    padding: 10px; /* Ajustar el tamaño del botón */
+    font-size: 14px; /* Reducir el tamaño de la fuente */
+  }
+
+  /* Menú lateral en dispositivos móviles */
+  .menu {
+    display: block; /* Hacer visible el menú en dispositivos pequeños */
+    padding: 1rem;
+  }
+
+  /* Ajustar las imágenes y los márgenes para pantallas pequeñas */
+  .image-container {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .content {
+    padding: 1rem; /* Reducir padding */
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Pantallas medianas y grandes */
+@media (min-width: 640px) {
+  .login-container {
+    padding: 2rem; /* Aumentar el padding en pantallas más grandes */
+  }
+
+  .login-button {
+    padding: 12px;
+    font-size: 16px; /* Fuente más grande en pantallas grandes */
+  }
 }
+
 
