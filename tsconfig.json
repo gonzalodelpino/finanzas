@@ -15,7 +15,7 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "react-jsx",  // Aquí debe ser "react-jsx" y no "preserve"
+    "jsx": "preserve", // Aquí debe ser "react-jsx" y no "preserve"
     "incremental": true,
     "plugins": [
       {
@@ -39,4 +39,3 @@
     "node_modules"
   ]
 }
-

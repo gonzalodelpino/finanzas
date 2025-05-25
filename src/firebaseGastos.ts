@@ -40,7 +40,21 @@ export const obtenerGastos = async () => {
   const q = query(gastosRef, where("usuarioId", "==", usuarioId));
   const snapshot = await getDocs(q);
   
-  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  return snapshot.docs.map((doc) => {
+    const docData = doc.data();
+    
+    // Convierte la fecha de Firebase Timestamp a un objeto Date
+    const fecha = docData.fecha ? docData.fecha.toDate() : null; // Asegúrate de convertirla solo si existe
+    
+    return {
+      id: doc.id,
+      fecha,  // Aquí la fecha es un objeto Date válido
+      monto: docData.monto,
+      categoria: docData.categoria,
+      notas: docData.notas,
+      usuarioId: docData.usuarioId,
+    };
+  });
 };
 
 // Eliminar un gasto

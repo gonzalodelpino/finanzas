@@ -269,7 +269,7 @@ export default function DashboardPage() {
 
       {/* Contenido */}
       <main className="flex-1 p-6 overflow-y-auto max-h-screen transition-all duration-300 ease-in-out">
-        <h1 className="text-3xl font-bold mb-6 text-center text-blue-600">Dashboard</h1>
+        <h1 className="text-3xl font-bold mb-6 text-center text-blue-600"></h1>
 
         {loading ? (
           <Loader />
@@ -326,8 +326,8 @@ export default function DashboardPage() {
             )}
 
             {activeMenu === 'gastos' && (
-              <div className="bg-white p-6 rounded-2xl shadow-lg">
-                <h2 className="text-xl font-semibold mb-4">Mis Gastos</h2>
+                          <div className="bg-white p-6 rounded-2xl shadow-lg">
+                <h2 className="text-xl font-semibold mb-4 text-center">Mis Gastos</h2>
                 <div className="space-y-4">
                   <input
                     type="text"

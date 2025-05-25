@@ -6,6 +6,7 @@ import { db } from '@/firebase';
 import { useAuth } from '@/context/AuthContext';
 import Loader from '@/components/Loader';
 import { toast } from 'sonner';
+import jsPDF from 'jspdf';
 
 import {
   PieChart,
@@ -119,9 +120,38 @@ export default function AnalisisPage() {
     }
   };
 
+  // Función para generar el PDF
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    
+    doc.setFontSize(18);
+    doc.text('Análisis de Gastos', 14, 22);
+    doc.setFontSize(14);
+
+    doc.text(`Total Gastado: $${calculateSummary(dataPorCategoria).total}`, 14, 30);
+    doc.text(`Gasto Máximo: $${calculateSummary(dataPorCategoria).max}`, 14, 38);
+    doc.text(`Gasto Mínimo: $${calculateSummary(dataPorCategoria).min}`, 14, 46);
+
+    // Graficar los datos (esto es un ejemplo, puedes hacerlo mejor según el formato de tu gráfico)
+    doc.text('Gastos por Categoría:', 14, 54);
+    dataPorCategoria.forEach((item, index) => {
+      doc.text(`${item.name}: $${item.value}`, 14, 62 + (index * 8));
+    });
+
+    doc.save('analisis_gastos.pdf');
+  };
+
   return (
     <div className="flex flex-col items-center p-6">
       <h1 className="text-3xl font-bold mb-6 text-center text-blue-600">Análisis de Gastos</h1>
+
+      {/* Botón para exportar PDF */}
+      <button
+        onClick={handleExportPDF}
+        className="bg-blue-600 text-white px-6 py-2 rounded-lg mb-6 shadow-lg transform hover:scale-105 transition-all duration-500 ease-in-out"
+      >
+        Exportar a PDF
+      </button>
 
       {loading ? (
         <Loader />
@@ -193,25 +223,27 @@ export default function AnalisisPage() {
             <h2 className="text-xl font-semibold mb-6 text-center text-gray-700">Tendencia de Gastos</h2>
             <ResponsiveContainer width="100%" height={350}>
               <LineChart data={dataPorFecha}>
-<CartesianGrid strokeDasharray="3 3" />
-<XAxis dataKey="name" tick={{ fontSize: 14 }} />
-<YAxis tick={{ fontSize: 14 }} />
-<Tooltip cursor={{ stroke: 'red', strokeWidth: 2 }} />
-<Legend verticalAlign="bottom" height={36} />
-<Line type="monotone" dataKey="value" stroke="#82ca9d" onClick={handleDataClick} />
-</LineChart>
-</ResponsiveContainer>
-        {selectedData && (
-          <div className="mt-4 text-center">
-            <h3 className="text-lg font-semibold">{selectedData.name}</h3>
-            <p><strong>Total de gastos:</strong> ${calculateSummary([selectedData]).total}</p>
-            <p><strong>Gasto máximo:</strong> ${calculateSummary([selectedData]).max}</p>
-            <p><strong>Gasto mínimo:</strong> ${calculateSummary([selectedData]).min}</p>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" tick={{ fontSize: 14 }} />
+                <YAxis tick={{ fontSize: 14 }} />
+                <Tooltip cursor={{ stroke: 'red', strokeWidth: 2 }} />
+                <Legend verticalAlign="bottom" height={36} />
+                <Line type="monotone" dataKey="value" stroke="#82ca9d" onClick={handleDataClick} />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
-        )}
-      </div>
+
+          {selectedData && (
+            <div className="mt-4 text-center">
+              <h3 className="text-lg font-semibold">{selectedData.name}</h3>
+              <p><strong>Total de gastos:</strong> ${calculateSummary([selectedData]).total}</p>
+              <p><strong>Gasto máximo:</strong> ${calculateSummary([selectedData]).max}</p>
+              <p><strong>Gasto mínimo:</strong> ${calculateSummary([selectedData]).min}</p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
-  )}
-</div>
-);
+  );
 }
+
