@@ -1,7 +1,26 @@
+'use client';
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "../context/AuthContext";
 import Head from "next/head";
-import Image from "next/image";
 
 export default function Home() {
+  const { user } = useAuth();  // Obtener el estado del usuario
+  const router = useRouter();
+
+  useEffect(() => {
+    // Si el usuario no está autenticado, redirigir a la página de login
+    if (!user) {
+      router.push("/login");
+    }
+  }, [user, router]);
+
+  // Si el usuario no está autenticado, no renderizar nada aún
+  if (!user) {
+    return null; // o un componente de carga si prefieres mostrar algo mientras redirige
+  }
+
   return (
     <>
       <Head>
@@ -61,4 +80,3 @@ export default function Home() {
     </>
   );
 }
-

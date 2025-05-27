@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../../firebase';
+import { useAuth } from '../../context/AuthContext'; // Usamos el hook del AuthContext
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login } = useAuth(); // Obtenemos la función de login del AuthContext
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -22,8 +22,8 @@ export default function LoginPage() {
     }
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      router.push('/dashboard');
+      await login(email, password); // Usamos el login del AuthContext
+      router.push('/dashboard'); // Redirige al dashboard después de iniciar sesión
     } catch (error: any) {
       setError('Error al iniciar sesión. Revisa tus credenciales.');
     }
@@ -81,4 +81,3 @@ export default function LoginPage() {
     </div>
   );
 }
-

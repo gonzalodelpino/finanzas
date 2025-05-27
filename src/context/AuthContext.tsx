@@ -6,10 +6,10 @@ import { signInWithEmailAndPassword, signOut, onAuthStateChanged, User } from "f
 
 // Definir el tipo de los valores del contexto
 interface AuthContextType {
-  user: User | null;
-  loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
+  user: User | null;  // Usuario autenticado o null si no está autenticado
+  loading: boolean;   // Estado de carga, útil para mostrar un loader mientras se verifica la autenticación
+  login: (email: string, password: string) => Promise<void>; // Función para loguearse
+  logout: () => Promise<void>; // Función para hacer logout
 }
 
 // Crear el contexto
@@ -17,14 +17,14 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Crear el provider que envolverá a toda la aplicación
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(null); // Estado para el usuario autenticado
+  const [loading, setLoading] = useState(true); // Estado para saber si estamos esperando la verificación de autenticación
 
   // Controlar el estado de autenticación del usuario
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setLoading(false);
+      setUser(currentUser); // Establece el usuario autenticado en el estado
+      setLoading(false); // Una vez que se verifica el estado de autenticación, dejamos de estar en carga
     });
 
     return unsubscribe; // Limpiar el estado cuando el componente se desmonte
@@ -33,7 +33,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Función para hacer login
   const login = async (email: string, password: string) => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      await signInWithEmailAndPassword(auth, email, password); // Intenta autenticar al usuario
     } catch (error) {
       throw error; // Manejar el error en la página de login
     }
@@ -41,9 +41,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Función para hacer logout
   const logout = async () => {
-    await signOut(auth);
+    await signOut(auth); // Cierra la sesión del usuario
   };
 
+  // Retorna el contexto con los valores del usuario, estado de carga, login y logout
   return (
     <AuthContext.Provider value={{ user, loading, login, logout }}>
       {children}

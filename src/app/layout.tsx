@@ -1,3 +1,5 @@
+// /src/app/layout.tsx
+
 'use client';
 
 import { Inter, Roboto_Mono } from "next/font/google";
@@ -32,6 +34,7 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${robotoMono.variable} antialiased min-h-screen bg-background font-sans`}
       >
+        {/* Asegúrate de que AuthProvider envuelva todo el contenido */}
         <AuthProvider>
           <Toaster richColors />
           {children} {/* Muestra siempre los hijos */}
@@ -40,20 +43,3 @@ export default function RootLayout({
     </html>
   );
 }
-
-// Componente que maneja la lógica de autenticación
-const AuthContent = ({ children }: { children: React.ReactNode }) => {
-  const { user } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!user) {
-      router.push("/login"); // Redirige a login si no hay usuario autenticado
-    }
-  }, [user, router]);
-
-  // Mostrar contenido solo si hay un usuario autenticado
-  if (!user) return <div>Cargando...</div>; // Agregar un indicador de carga si aún no se tiene el estado del usuario
-
-  return <>{children}</>;
-};
