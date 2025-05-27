@@ -43,7 +43,7 @@ export default function AnalisisPage() {
         const querySnapshot = await getDocs(collection(db, 'gastos'));
         const userGastos = querySnapshot.docs
           .map((doc) => ({ id: doc.id, ...doc.data() }))
-          .filter((gasto) => gasto.usuarioId === user.uid);
+          .filter((gasto) => gasto.usuarioId === user.uid); // Asegúrate de que 'usuarioId' es el campo correcto
 
         if (userGastos.length === 0) {
           setError('No se encontraron gastos registrados.');
@@ -77,23 +77,40 @@ export default function AnalisisPage() {
     }));
   };
 
-  const agruparPorMes = () => {
-    const mesMap: Record<string, number> = {};
-    gastos.forEach((gasto) => {
-      const mes = new Date(gasto.fecha).toLocaleString('default', { month: 'long' });
-      mesMap[mes] = (mesMap[mes] || 0) + gasto.monto;
-    });
-    return Object.keys(mesMap).map((mes) => ({ name: mes, value: mesMap[mes] }));
-  };
+ const agruparPorMes = () => {
+  const mesMap: Record<string, number> = {};
+  gastos.forEach((gasto) => {
+    const fecha = gasto.fecha?.toDate ? gasto.fecha.toDate() : new Date(gasto.fecha);
+    const mes = fecha.toLocaleString('default', { month: 'long' });
+    mesMap[mes] = (mesMap[mes] || 0) + gasto.monto;
+  });
+  return Object.keys(mesMap).map((mes) => ({ name: mes, value: mesMap[mes] }));
+};
 
-  const agruparPorFecha = () => {
-    const fechaMap: Record<string, number> = {};
-    gastos.forEach((gasto) => {
-      const fecha = new Date(gasto.fecha).toLocaleDateString();
-      fechaMap[fecha] = (fechaMap[fecha] || 0) + gasto.monto;
-    });
-    return Object.keys(fechaMap).map((fecha) => ({ name: fecha, value: fechaMap[fecha] }));
-  };
+const agruparPorFecha = () => {
+  const fechaMap: Record<string, { timestamp: number, total: number }> = {};
+
+  gastos.forEach((gasto) => {
+    const fecha = gasto.fecha?.toDate ? gasto.fecha.toDate() : new Date(gasto.fecha);
+    const fechaStr = fecha.toLocaleDateString();
+
+    if (!fechaMap[fechaStr]) {
+      fechaMap[fechaStr] = { timestamp: fecha.getTime(), total: 0 };
+    }
+
+    fechaMap[fechaStr].total += gasto.monto;
+  });
+
+  return Object.entries(fechaMap)
+    .map(([fechaStr, { timestamp, total }]) => ({
+      name: fechaStr,
+      value: total,
+      timestamp,
+    }))
+    .sort((a, b) => a.timestamp - b.timestamp); // ← Ordenar por fecha ascendente
+};
+
+
 
   const dataPorCategoria = agruparPorCategoria();
   const dataPorMes = agruparPorMes();
@@ -120,7 +137,6 @@ export default function AnalisisPage() {
     }
   };
 
-  // Función para generar el PDF
   const handleExportPDF = () => {
     const doc = new jsPDF();
     
@@ -132,7 +148,6 @@ export default function AnalisisPage() {
     doc.text(`Gasto Máximo: $${calculateSummary(dataPorCategoria).max}`, 14, 38);
     doc.text(`Gasto Mínimo: $${calculateSummary(dataPorCategoria).min}`, 14, 46);
 
-    // Graficar los datos (esto es un ejemplo, puedes hacerlo mejor según el formato de tu gráfico)
     doc.text('Gastos por Categoría:', 14, 54);
     dataPorCategoria.forEach((item, index) => {
       doc.text(`${item.name}: $${item.value}`, 14, 62 + (index * 8));
@@ -145,7 +160,6 @@ export default function AnalisisPage() {
     <div className="flex flex-col items-center p-6">
       <h1 className="text-3xl font-bold mb-6 text-center text-blue-600">Análisis de Gastos</h1>
 
-      {/* Botón para exportar PDF */}
       <button
         onClick={handleExportPDF}
         className="bg-blue-600 text-white px-6 py-2 rounded-lg mb-6 shadow-lg transform hover:scale-105 transition-all duration-500 ease-in-out"
@@ -159,7 +173,6 @@ export default function AnalisisPage() {
         <div className="text-center text-red-600 font-medium">{error}</div>
       ) : (
         <div className="flex flex-col gap-12 w-full">
-          {/* Tarjetas de resumen de gastos al principio */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full mb-12">
             <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-500 ease-in-out text-white border border-blue-800">
               <h3 className="text-xl font-semibold text-center">Total Gastado</h3>
@@ -175,9 +188,7 @@ export default function AnalisisPage() {
             </div>
           </div>
 
-          {/* Fila de gráficos: Categoría y Mes */}
           <div className="grid md:grid-cols-2 gap-8 w-full">
-            {/* Categoría */}
             <div className="bg-white p-6 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-500 ease-in-out border border-gray-300">
               <h2 className="text-xl font-semibold mb-6 text-center text-gray-700">Gastos por Categoría</h2>
               <div className="w-full h-[480px]">
@@ -202,7 +213,6 @@ export default function AnalisisPage() {
               </div>
             </div>
 
-            {/* Mes */}
             <div className="bg-white p-6 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-500 ease-in-out border border-gray-300">
               <h2 className="text-xl font-semibold mb-6 text-center text-gray-700">Gastos por Mes</h2>
               <ResponsiveContainer width="100%" height={480}>
@@ -218,7 +228,6 @@ export default function AnalisisPage() {
             </div>
           </div>
 
-          {/* Tendencia */}
           <div className="bg-white p-6 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-500 ease-in-out w-full border border-gray-300">
             <h2 className="text-xl font-semibold mb-6 text-center text-gray-700">Tendencia de Gastos</h2>
             <ResponsiveContainer width="100%" height={350}>
@@ -228,22 +237,12 @@ export default function AnalisisPage() {
                 <YAxis tick={{ fontSize: 14 }} />
                 <Tooltip cursor={{ stroke: 'red', strokeWidth: 2 }} />
                 <Legend verticalAlign="bottom" height={36} />
-                <Line type="monotone" dataKey="value" stroke="#82ca9d" onClick={handleDataClick} />
+                <Line type="monotone" dataKey="value" stroke="#82ca9d" strokeWidth={2} />
               </LineChart>
             </ResponsiveContainer>
           </div>
-
-          {selectedData && (
-            <div className="mt-4 text-center">
-              <h3 className="text-lg font-semibold">{selectedData.name}</h3>
-              <p><strong>Total de gastos:</strong> ${calculateSummary([selectedData]).total}</p>
-              <p><strong>Gasto máximo:</strong> ${calculateSummary([selectedData]).max}</p>
-              <p><strong>Gasto mínimo:</strong> ${calculateSummary([selectedData]).min}</p>
-            </div>
-          )}
         </div>
       )}
     </div>
   );
 }
-

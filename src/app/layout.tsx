@@ -1,4 +1,4 @@
-"use client"; // Marca este archivo como componente de cliente
+'use client';
 
 import { Inter, Roboto_Mono } from "next/font/google";
 import { AuthProvider } from "../context/AuthContext"; 
@@ -23,7 +23,6 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Aquí, el AuthProvider está envuelto correctamente, y el useAuth puede usarse dentro del componente
   return (
     <html lang="es">
       <head>
@@ -33,10 +32,9 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${robotoMono.variable} antialiased min-h-screen bg-background font-sans`}
       >
-        {/* El AuthProvider ahora envuelve todo */}
         <AuthProvider>
           <Toaster richColors />
-          <AuthContent>{children}</AuthContent> {/* Solo muestra el contenido si el usuario está autenticado */}
+          {children} {/* Muestra siempre los hijos */}
         </AuthProvider>
       </body>
     </html>
@@ -45,18 +43,17 @@ export default function RootLayout({
 
 // Componente que maneja la lógica de autenticación
 const AuthContent = ({ children }: { children: React.ReactNode }) => {
-  const { user } = useAuth();  // Ahora usamos el hook dentro de un componente donde el contexto está disponible
+  const { user } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     if (!user) {
-      router.push("/login"); // Redirigir a login si no está autenticado
+      router.push("/login"); // Redirige a login si no hay usuario autenticado
     }
   }, [user, router]);
 
   // Mostrar contenido solo si hay un usuario autenticado
-  if (!user) return null;
+  if (!user) return <div>Cargando...</div>; // Agregar un indicador de carga si aún no se tiene el estado del usuario
 
   return <>{children}</>;
 };
-

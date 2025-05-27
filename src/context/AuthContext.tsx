@@ -1,9 +1,8 @@
-// /home/gonzalo/finanzas/src/app/context/AuthContext.tsx
 "use client";
 
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
-import { auth } from "../firebase"; 
-import { onAuthStateChanged, User } from "firebase/auth";
+import { auth } from "../firebase"; // Importa la instancia de auth desde firebase.ts
+import { signInWithEmailAndPassword, signOut, onAuthStateChanged, User } from "firebase/auth";
 
 // Definir el tipo de los valores del contexto
 interface AuthContextType {
@@ -34,7 +33,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Función para hacer login
   const login = async (email: string, password: string) => {
     try {
-      await auth.signInWithEmailAndPassword(email, password);
+      await signInWithEmailAndPassword(auth, email, password);
     } catch (error) {
       throw error; // Manejar el error en la página de login
     }
@@ -42,7 +41,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Función para hacer logout
   const logout = async () => {
-    await auth.signOut();
+    await signOut(auth);
   };
 
   return (
